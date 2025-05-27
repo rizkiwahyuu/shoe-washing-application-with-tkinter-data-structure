@@ -1,0 +1,1698 @@
+import tkinter as tk
+from tkinter import Tk, ttk, Label, Scale, Canvas, Entry, Text, Button, PhotoImage, Toplevel
+from tkinter import Checkbutton
+from customtkinter import *
+from customtkinter import CTk, CTkCanvas, CTkLabel, CTkImage, CTkButton
+from tkinter import messagebox
+from PIL import ImageTk, Image
+from tkinter import Tk, Frame, Label, PhotoImage, Canvas, Scrollbar
+import re
+from tkcalendar import DateEntry
+import textwrap
+from datetime import datetime
+from collections import deque
+import csv
+from collections import defaultdict, deque
+from queue import Queue
+from tkinter import Scrollbar
+
+
+class Atlas:
+    def __init__(self, master):
+        self.master = master
+        master.title("Atlas!")
+        master.geometry("1366x768")
+        master.state("zoomed")
+        
+
+        # Store images to prevent garbage collection
+        self.images = {}
+
+        self.load_image('halaman_awal', "DESAIN ATLAS/Halaman Depan.jpg")
+        self.load_image('masukadmin', "DESAIN ATLAS/ATLAS Shoes and Care.png", button=True)
+        self.load_image('masukpengguna', "DESAIN ATLAS/tombol masuk pengguna.png", button=True)
+        self.load_image('tentangkami', "DESAIN ATLAS/TOMBOL KAMI.png", button=True)
+        self.load_image('tlayanan', "DESAIN ATLAS/tombol layanan.png", button=True)
+        self.load_image('tombol_hasil', "DESAIN ATLAS/Tombol Hasil.png", button=True)
+        self.load_image('home',"DESAIN ATLAS/tombol home.png",button=True)
+
+        self.show_home()
+
+        self.total = 0 
+        self.selected_service = None
+        self.ongkir = 0
+        self.jenis_bayar = None
+        self.current_datetime = None
+        self.ongkir_data = ""
+        self.checkbox_status = {}
+
+    def load_image(self, key, path, button=False):
+        img = Image.open(path)
+        if button:
+            self.images[key] = PhotoImage(file=path)
+        else:
+            resized_img = img.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight()))
+            self.images[key] = ImageTk.PhotoImage(resized_img)
+
+    def clear_widgets(self):
+        for widget in self.master.winfo_children():
+            widget.destroy()
+
+    def show_home(self):
+        self.clear_widgets()
+        bg = Label(self.master, image=self.images['halaman_awal'], compound="center", bg="#387647")
+        bg.image = self.images['halaman_awal']
+        bg.place(x=0, y=0, relwidth=1, relheight=1)
+
+        masukadmin_btn = Button(self.master, image=self.images['masukadmin'], width=224, height=75, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.login_admin)
+        masukadmin_btn.place(x=78, y=534)
+
+        masukpengguna_btn = Button(self.master, image=self.images['masukpengguna'], width=224, height=75, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.login)
+        masukpengguna_btn.place(x=325, y=534)
+
+        tentangkami_btn = Button(self.master, image=self.images['tentangkami'], width=133, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_tentang)
+        tentangkami_btn.place(x=985, y=4)
+
+        tlayanan_btn = Button(self.master, image=self.images['tlayanan'], width=100, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_layanan)
+        tlayanan_btn.place(x=857, y=4)
+
+        tombol_hasil_btn = Button(self.master, image=self.images['tombol_hasil'], width=118, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_hasil)
+        tombol_hasil_btn.place(x=1120, y=5)
+
+    def show_layanan(self):
+        self.clear_widgets()
+        layanan_img = Image.open("DESAIN ATLAS/Layanan.jpg")
+        photo2 = ImageTk.PhotoImage(layanan_img.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+        self.images['layanan'] = photo2
+
+        bg = Label(self.master, image=self.images['layanan'], compound="center", bg="#387647")
+        bg.image = self.images['layanan']
+        bg.pack(fill="both", expand="yes")
+
+        tentangkami_btn = Button(self.master, image=self.images['tentangkami'], width=133, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_tentang)
+        tentangkami_btn.place(x=985, y=4)
+
+        tombol_hasil_btn = Button(self.master, image=self.images['tombol_hasil'], width=118, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_hasil)
+        tombol_hasil_btn.place(x=1120, y=5)
+
+        home_btn = Button(self.master, image=self.images['home'], width=90, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_home)
+        home_btn.place(x=750, y=5)
+
+    def show_tentang(self):
+        self.clear_widgets()
+        tentang_img = Image.open("DESAIN ATLAS/Tentang Kami.jpg")
+        photo3 = ImageTk.PhotoImage(tentang_img.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+        self.images['tentang'] = photo3
+
+        bg = Label(self.master, image=self.images['tentang'], compound="center", bg="#387647")
+        bg.image = self.images['tentang']
+        bg.pack(fill="both", expand="yes")
+
+        tlayanan_btn = Button(self.master, image=self.images['tlayanan'], width=100, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_layanan)
+        tlayanan_btn.place(x=857, y=5)
+
+        tombol_hasil_btn = Button(self.master, image=self.images['tombol_hasil'], width=118, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_hasil)
+        tombol_hasil_btn.place(x=1120, y=5)
+
+        home_btn = Button(self.master, image=self.images['home'], width=90, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_home)
+        home_btn.place(x=750, y=5)
+
+    def show_hasil(self):
+        self.clear_widgets()
+        hasil_img = Image.open("DESAIN ATLAS/Hasil.png")
+        photo4 = ImageTk.PhotoImage(hasil_img.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+        self.images['hasil'] = photo4
+
+        bg = Label(self.master, image=self.images['hasil'], compound="center", bg="#387647")
+        bg.image = self.images['hasil']
+        bg.pack(fill="both", expand="yes")
+
+        tentangkami_btn = Button(self.master, image=self.images['tentangkami'], width=133, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_tentang)
+        tentangkami_btn.place(x=985, y=4)
+
+        tlayanan_btn = Button(self.master, image=self.images['tlayanan'], width=100, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_layanan)
+        tlayanan_btn.place(x=857, y=5)
+
+        home_btn = Button(self.master, image=self.images['home'], width=90, height=30, borderwidth=0, bg='white', activebackground='white', cursor='hand2', command=self.show_home)
+        home_btn.place(x=750, y=5)
+
+    def login_admin(self) :
+        for widget in self.master.winfo_children():
+            widget.destroy()
+
+        self.login_admin = Image.open("DESAIN ATLAS/LOG IN (2).jpg")
+        self.photo7 = ImageTk.PhotoImage(self.login_admin.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel7 = Label(self.master, image=self.photo7, compound="center", bg="#387647")
+        self.bg_panel7.image = self.photo7
+        self.bg_panel7.pack(fill="both", expand="yes")
+
+        self.username2_entry = Entry(self.bg_panel7, border=0, width=20, font=("Georgia", 17), fg="black")
+        self.username2_entry.place(x=446, y=322)
+
+        self.username2_entry.insert(0, "Username")
+        self.username2_entry.bind("<FocusIn>", self.clear_placeholder_username)
+        self.username2_entry.bind("<FocusOut>", self.add_placeholder_username)
+
+        self.pass2_entry = Entry(self.bg_panel7, border=0, width=20, font=("Georgia", 17), fg="black")
+        self.pass2_entry.place(x=446, y=397)
+
+        self.pass2_entry.insert(0, "Password")
+        self.pass2_entry.bind("<FocusIn>", self.clear_placeholder_password)
+        self.pass2_entry.bind("<FocusOut>", self.add_placeholder_password)
+
+        self.tombolmasukadmin = PhotoImage(file = r"DESAIN ATLAS/tombol masuk admin.png") 
+        self.tmasukadmin = Button(self.master,image=self.tombolmasukadmin,width=183,height=40,borderwidth=0,bg='white',activebackground='white',cursor='hand2', command= self.Ceklogin_2).place(x=548, y=515)
+
+    def clear_placeholder_username(self, event):
+        if self.username2_entry.get() == "Username":
+            self.username2_entry.delete(0, tk.END)
+            self.username2_entry.config(fg='black')
+
+    def add_placeholder_username(self, event):
+        if self.username2_entry.get() == "":
+            self.username2_entry.insert(0, "Username")
+            self.username2_entry.config(fg='grey')
+
+    def clear_placeholder_password(self, event):
+        if self.pass2_entry.get() == "Password":
+            self.pass2_entry.delete(0, tk.END)
+            self.pass2_entry.config(fg='black', show="*")
+
+    def add_placeholder_password(self, event):
+        if self.pass2_entry.get() == "":
+            self.pass2_entry.insert(0, "Password")
+            self.pass2_entry.config(fg='grey', show="")
+
+    def login(self):
+        for widget in self.master.winfo_children():
+            widget.destroy()
+
+        self.login = Image.open("DESAIN ATLAS/LOG IN.png")
+        self.photo5 = ImageTk.PhotoImage(self.login.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel5 = Label(self.master, image=self.photo5, compound="center", bg="#387647")
+        self.bg_panel5.image = self.photo5
+        self.bg_panel5.pack(fill="both", expand="yes")
+
+        # Entry dan Button Login page (2)
+        self.username1_entry = Entry(self.bg_panel5, border=0, width=20, font=("Georgia", 17), fg="black")
+        self.username1_entry.place(x=446, y=308)
+
+        self.username1_entry.insert(0, "Username")
+        self.username1_entry.bind("<FocusIn>", self.clear_placeholder_username1)
+        self.username1_entry.bind("<FocusOut>", self.add_placeholder_username1)
+
+        self.pass1_entry = Entry(self.bg_panel5, border=0, width=20, font=("Georgia", 17), fg="black")
+        self.pass1_entry.place(x=446, y=387)
+
+        self.pass1_entry.insert(0, "Password")
+        self.pass1_entry.bind("<FocusIn>", self.clear_placeholder_password1)
+        self.pass1_entry.bind("<FocusOut>", self.add_placeholder_password1)
+
+        self.tombolpesan = PhotoImage(file = r"DESAIN ATLAS/Tombol Pesan.png") 
+        self.tpesan = Button(self.master,image=self.tombolpesan,width=188,height=40,borderwidth=0,bg='white',activebackground='white',cursor='hand2', command= self.Ceklogin).place(x=545, y=515)
+        
+        self.tombol_klik = PhotoImage(file = r"DESAIN ATLAS/tombolklikdisini.png") 
+        self.tklik = Button(self.master,image=self.tombol_klik,width=85,height=20,borderwidth=0,bg='white',activebackground='white',cursor='hand2', command= self.signup_frame).place(x=725+1, y=437+31)
+
+        self.show_password_var = tk.IntVar()
+        self.n_checkButton = Checkbutton(self.bg_panel5, bg='#F0E9D0',font=("Arial", 9) ,command=self.toggle_password_visibility, text='Show password', fg='black',variable=self.show_password_var)
+        self.n_checkButton.place(x=710, y=400+29)
+
+    def toggle_password_visibility(self):
+        if self.show_password_var.get():
+            self.pass1_entry.config(show='')
+        else:
+            self.pass1_entry.config(show='*')
+
+    def clear_placeholder_username1(self, event):
+        if self.username1_entry.get() == "Username":
+            self.username1_entry.delete(0, tk.END)
+            self.username1_entry.config(fg='black')
+
+    def add_placeholder_username1(self, event):
+        if self.username1_entry.get() == "":
+            self.username1_entry.insert(0, "Username")
+            self.username1_entry.config(fg='grey')
+
+    def clear_placeholder_password1(self, event):
+        if self.pass1_entry.get() == "Password":
+            self.pass1_entry.delete(0, tk.END)
+            self.pass1_entry.config(fg='black', show="*")
+
+    def add_placeholder_password1(self, event):
+        if self.pass1_entry.get() == "":
+            self.pass1_entry.insert(0, "Password")
+            self.pass1_entry.config(fg='grey', show="")
+
+
+    def Ceklogin(self):
+        # Logika Login
+
+        self.username = self.username1_entry.get()
+        password = self.pass1_entry.get()
+
+        with open("data_user.csv", "r") as file:
+            for line in file:
+
+                user_info = line.strip().split(", ")
+
+                stored_username = user_info[1].split(": ")[1]
+                stored_pass = user_info[2].split(": ")[1]
+
+                if self.username == stored_username and password == stored_pass:
+                    
+                    self.home_page()
+
+                    return 
+        
+        messagebox.showerror("Login Failed", "Please register first")
+
+    def signup_frame(self):
+        for widget in self.master.winfo_children():
+                widget.destroy()
+
+        self.signup = Image.open("DESAIN ATLAS/Register.jpg")
+        photo6 = ImageTk.PhotoImage(self.signup.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel6 = Label(self.master, image=photo6, compound="center", bg="#387647")
+        self.bg_panel6.image = photo6
+        self.bg_panel6.pack(fill="both", expand="yes")
+
+        self.namalengkap_entry = Entry(self.bg_panel6, border=0, width=20, font=("Georgia", 17), fg="black")
+        self.namalengkap_entry.place(x=458, y=270)
+
+        self.namalengkap_entry.insert(0, "Nama Lengkap")
+        self.namalengkap_entry.bind("<FocusIn>", self.clear_placeholder_namalengkapreg)
+        self.namalengkap_entry.bind("<FocusOut>", self.add_placeholder_namalengkapreg)
+
+        self.usernameregis_entry = Entry(self.bg_panel6, border=0, width=20, font=("Georgia", 17), fg="black")
+        self.usernameregis_entry.place(x=458, y=350)
+
+        self.usernameregis_entry.insert(0, "Username")
+        self.usernameregis_entry.bind("<FocusIn>", self.clear_placeholder_usernamereg)
+        self.usernameregis_entry.bind("<FocusOut>", self.add_placeholder_usernamereg)
+
+        self.passregis_entry = Entry(self.bg_panel6, border=0, width=20, font=("Georgia", 17), fg="black")
+        self.passregis_entry.place(x=458, y=420)
+
+        self.passregis_entry.insert(0, "Password")
+        self.passregis_entry.bind("<FocusIn>", self.clear_placeholder_passreg)
+        self.passregis_entry.bind("<FocusOut>", self.add_placeholder_passreg)
+
+        self.tombolregis = PhotoImage(file = r"DESAIN ATLAS/Tombol Regsiter.png") 
+        self.tregis = Button(self.master,image=self.tombolregis,width=150,height=30,borderwidth=0,bg='white',activebackground='white',cursor='hand2', command= self.register).place(x=565, y=512)
+
+    def clear_placeholder_namalengkapreg(self, event):
+        if self.namalengkap_entry.get() == "Nama Lengkap":
+            self.namalengkap_entry.delete(0, tk.END)
+            self.namalengkap_entry.config(fg='black')
+
+    def add_placeholder_namalengkapreg(self, event):
+        if self.namalengkap_entry.get() == "":
+            self.namalengkap_entry.insert(0, "Nama Lengkap")
+            self.namalengkap_entry.config(fg='grey', show="")
+
+    def clear_placeholder_usernamereg(self, event):
+        if self.usernameregis_entry.get() == "Username":
+            self.usernameregis_entry.delete(0, tk.END)
+            self.usernameregis_entry.config(fg='black')
+
+    def add_placeholder_usernamereg(self, event):
+        if self.usernameregis_entry.get() == "":
+            self.usernameregis_entry.insert(0, "Username")
+            self.usernameregis_entry.config(fg='grey')
+
+    def clear_placeholder_passreg(self, event):
+        if self.passregis_entry.get() == "Password":
+            self.passregis_entry.delete(0, tk.END)
+            self.passregis_entry.config(fg='black',show="*")
+
+    def add_placeholder_passreg(self, event):
+        if self.passregis_entry.get() == "":
+            self.passregis_entry.insert(0, "Password")
+            self.passregis_entry.config(fg='grey')
+
+
+    def register(self):
+
+        # Logika Register
+        nama_lengkap = self.namalengkap_entry.get()
+        self.username = self.usernameregis_entry.get()
+        password = self.passregis_entry.get()
+
+        # Validasi username
+        if len(self.usernameregis_entry.get()) < 5:
+            messagebox.showerror("Invalid Username", "Username must have at least 5 characters.")
+            return
+
+        # Validasi password
+        if len(self.passregis_entry.get()) < 5 or not any(char.isdigit() for char in self.passregis_entry.get()):
+            messagebox.showerror("Invalid Password", "Password must have at least 5 characters and contain at least 1 digit.")
+            return
+        
+        if self.is_username_exists(self.username):
+            messagebox.showerror("Username Exists", "This username is already registered. Please choose another username.")
+            return
+
+        # Menyimpan data register user ke dalam file "user_datr.csv"
+        with open('data_user.csv', 'a+') as file:
+            # Mengecek apakah file tidak kosong
+            file.seek(0)
+            data = file.read(100)
+            if len(data) > 0:
+                file.write("\n")  # Jika file tidak kosong, tambahkan baris baru sebelum menulis data baru
+            file.write(f"Nama Lengkap: {nama_lengkap}, Username: {self.username}, Password: {password}")
+
+        messagebox.showinfo("Registration Successful", "Registration successful. You can now login.")
+        self._clear_sign_up()
+        self.return_to_login() 
+    
+    # Fungsi untuk mengecek apakah username sudah terdaftar
+    def is_username_exists(self, username):
+        with open('data_user.csv', 'r') as file:
+            for line in file:
+                if f"Username: {username}" in line:
+                    return True
+        return False
+
+    def _clear_sign_up(self):
+        self.namalengkap_entry.delete(0, 'end')
+        self.usernameregis_entry.delete(0, 'end')
+        self.passregis_entry.delete(0, 'end')
+
+    def return_to_login(self):
+        for widget in self.master.winfo_children():
+                widget.destroy()
+
+        # Set image as a background
+        self.login = Image.open("DESAIN ATLAS/LOG IN.png")
+        self.photo9 = ImageTk.PhotoImage(self.login.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel9 = Label(self.master, image=self.photo9, compound="center", bg="#387647")
+        self.bg_panel9.image = self.photo9
+        self.bg_panel9.pack(fill="both", expand="yes")
+
+        # Entry dan Button Login page (2)
+        self.username3_entry = Entry(self.bg_panel9, border=0, width=20, font=("Georgia", 17), fg="black")
+        self.username3_entry.place(x=446, y=308)
+
+        self.username3_entry.insert(0, "Username")
+        self.username3_entry.bind("<FocusIn>", self.clear_placeholder_username3)
+        self.username3_entry.bind("<FocusOut>", self.add_placeholder_username3)
+
+        self.pass3_entry = Entry(self.bg_panel9, border=0, width=20, font=("Georgia", 17), fg="black")
+        self.pass3_entry.place(x=446, y=387)
+
+        self.pass3_entry.insert(0, "Password")
+        self.pass3_entry.bind("<FocusIn>", self.clear_placeholder_password3)
+        self.pass3_entry.bind("<FocusOut>", self.add_placeholder_password3)
+
+        self.tombolpesan = PhotoImage(file = r"DESAIN ATLAS/Tombol Pesan.png") 
+        self.tpesan = Button(self.master,image=self.tombolpesan,width=188,height=40,borderwidth=0,bg='white',activebackground='white',cursor='hand2', command= self.Ceklogin1).place(x=545, y=515)
+        
+        self.tombol_klik = PhotoImage(file = r"DESAIN ATLAS/tombolklikdisini.png") 
+        self.tklik = Button(self.master,image=self.tombol_klik,width=85,height=20,borderwidth=0,bg='white',activebackground='white',cursor='hand2', command= self.signup_frame).place(x=725+1, y=437+31)
+
+        self.show_password_var1 = tk.IntVar()
+        self.n_checkButton = Checkbutton(self.bg_panel9, bg='#F0E9D0',font=("Arial", 9) ,command=self.toggle_password_visibility1, text='Show password', fg='black',variable=self.show_password_var1)
+        self.n_checkButton.place(x=710, y=400+29)
+
+    def Ceklogin1(self):
+        # Logika Login
+
+        self.username = self.username3_entry.get()
+        password = self.pass3_entry.get()
+
+        with open("data_user.csv", "r") as file:
+            for line in file:
+
+                user_info = line.strip().split(", ")
+
+                stored_username = user_info[1].split(": ")[1]
+                stored_pass = user_info[2].split(": ")[1]
+
+                if self.username == stored_username and password == stored_pass:
+                    
+                    self.home_page()
+
+                    return 
+        
+        messagebox.showerror("Login Failed", "Please register first")
+
+    def Ceklogin_2(self):
+
+        self.username = self.username2_entry.get()
+        password = self.pass2_entry.get()
+
+        with open("data_admin.csv", "r") as file:
+            for line in file:
+
+                user_info = line.strip().split(", ")
+
+                stored_username = user_info[0].split(": ")[1]
+                stored_pass = user_info[1].split(": ")[1]
+
+                if self.username == stored_username and password == stored_pass:
+                    
+                    self.cek_status_pesanan()
+
+                    return 
+        
+        messagebox.showerror("Login Failed", "Please register first")
+    
+    def toggle_password_visibility1(self):
+        if self.show_password_var1.get():
+            self.pass3_entry.config(show='')
+        else:
+            self.pass3_entry.config(show='*')
+
+
+    def clear_placeholder_username3(self, event):
+        if self.username3_entry.get() == "Username":
+            self.username3_entry.delete(0, tk.END)
+            self.username3_entry.config(fg='black')
+
+    def add_placeholder_username3(self, event):
+        if self.username3_entry.get() == "":
+            self.username3_entry.insert(0, "Username")
+            self.username3_entry.config(fg='grey')
+
+    def clear_placeholder_password3(self, event):
+        if self.pass3_entry.get() == "Password":
+            self.pass3_entry.delete(0, tk.END)
+            self.pass3_entry.config(fg='black', show="*")
+
+    def add_placeholder_password3(self, event):
+        if self.pass3_entry.get() == "":
+            self.pass3_entry.insert(0, "Password")
+            self.pass3_entry.config(fg='grey', show="")
+
+    def Ceklogin2(self):
+        # Logika Login
+        self.username = self.username3_entry.get()
+        password = self.pass3_entry.get()
+        with open("data_user.csv", "r") as file:
+            for line in file:
+                user_info = line.strip().split(", ")
+                stored_username = user_info[1].split(": ")[1]
+                stored_pass = user_info[2].split(": ")[1]
+                if self.username == stored_username and password == stored_pass:
+                    self.home_page()
+                    return 
+        
+        messagebox.showerror("Login Failed", "Please register first")
+
+    def home_page(self):
+        for widget in self.master.winfo_children():
+                widget.destroy()
+
+        self.home_page_img = Image.open("DESAIN ATLAS/Layanan bismillah.jpg")
+        self.photo8 = ImageTk.PhotoImage(self.home_page_img.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel8 = Label(self.master, image=self.photo8, compound="center", bg="#387647")
+        self.bg_panel8.image = self.photo8
+        self.bg_panel8.pack(fill="both", expand="yes")
+
+        self.selected_checkbox = tk.IntVar()
+
+        self.tombolpilihlayanan = PhotoImage(file = r"DESAIN ATLAS/Tombol next.png") 
+        self.tpilihlayanan = Button(self.master,image=self.tombolpilihlayanan,width=140,height=30,borderwidth=0,bg='white',activebackground='white',cursor='hand2', command= self.check_and_proceed).place(x=1015, y=590)
+
+        self.total_label = Label(self.bg_panel8, text=f"Rp {self.total:,}", font=("Arial", 16),bg="#E4F2E5")
+        self.total_label.place(x=300, y=594)
+
+        self.prices = {
+            "counter": 40000,
+            "counter1": 22000,
+            "counter2": 30000,
+            "counter3": 70000,
+            "counter4": 15000,
+            "counter5": 25000,
+        }
+
+        self.counter = 0
+        self.counter1 = 0
+        self.counter2 = 0
+        self.counter3 = 0
+        self.counter4 = 0
+        self.counter5 = 0
+
+        self.location_dropdown = None
+        self.total_harga_akhir = 0
+
+        self.plus_button = Button(self.master, text="+", font=("Arial", 12,"bold"),width=2,bg="#692415",fg="white",command=self.increment_counter)
+        self.plus_button.place(x=385, y=505)
+        self.minus_button = Button(self.master, text="-", font=("Arial", 12,"bold"),width=2, bg="#692415",fg="white", command=self.decrement_counter)
+        self.minus_button.place(x=325, y=505)
+        self.counter_entry = Entry(self.master, font=("Arial", 19),bg="white", justify='center',width=2)
+        self.counter_entry.place(x=355, y=505)
+        self.counter_entry.bind("<Return>", self.update_counter_from_entry)
+
+        self.plus_button1 = Button(self.master, text="+", font=("Arial", 12,"bold"),width=2,bg="#692415",fg="white",command=self.increment_counter1)
+        self.plus_button1.place(x=385, y=310)
+        self.minus_button1 = Button(self.master, text="-", font=("Arial", 12,"bold"),width=2, bg="#692415",fg="white", command=self.decrement_counter1)
+        self.minus_button1.place(x=325, y=310)
+        self.counter_entry1 = Entry(self.master, font=("Arial", 19),bg="white", justify='center',width=2)
+        self.counter_entry1.place(x=355, y=310)
+        self.counter_entry1.bind("<Return>", self.update_counter_from_entry1)
+
+        self.plus_button2 = Button(self.master, text="+", font=("Arial", 12,"bold"),width=2,bg="#692415",fg="white",command=self.increment_counter2)
+        self.plus_button2.place(x=385, y=115)
+        self.minus_button2 = Button(self.master, text="-", font=("Arial", 12,"bold"),width=2, bg="#692415",fg="white", command=self.decrement_counter2)
+        self.minus_button2.place(x=325, y=115)
+        self.counter_entry2 = Entry(self.master, font=("Arial", 19),bg="white", justify='center',width=2)
+        self.counter_entry2.place(x=355, y=115)
+        self.counter_entry2.bind("<Return>", self.update_counter_from_entry2)
+
+        self.plus_button3 = Button(self.master, text="+", font=("Arial", 12,"bold"),width=2,bg="#692415",fg="white",command=self.increment_counter3)
+        self.plus_button3.place(x=885, y=505)
+        self.minus_button3 = Button(self.master, text="-", font=("Arial", 12,"bold"),width=2, bg="#692415",fg="white", command=self.decrement_counter3)
+        self.minus_button3.place(x=825, y=505)
+        self.counter_entry3 = Entry(self.master, font=("Arial", 19),bg="white", justify='center',width=2)
+        self.counter_entry3.place(x=855, y=505)
+        self.counter_entry3.bind("<Return>", self.update_counter_from_entry3)
+
+        self.plus_button4 = Button(self.master, text="+", font=("Arial", 12,"bold"),width=2,bg="#692415",fg="white",command=self.increment_counter4)
+        self.plus_button4.place(x=885, y=320)
+        self.minus_button4 = Button(self.master, text="-", font=("Arial", 12,"bold"),width=2, bg="#692415",fg="white", command=self.decrement_counter4)
+        self.minus_button4.place(x=825, y=320)
+        self.counter_entry4 = Entry(self.master, font=("Arial", 19),bg="white", justify='center',width=2)
+        self.counter_entry4.place(x=855, y=320)
+        self.counter_entry4.bind("<Return>", self.update_counter_from_entry4)
+
+        self.plus_button5 = Button(self.master, text="+", font=("Arial", 12,"bold"),width=2,bg="#692415",fg="white",command=self.increment_counter5)
+        self.plus_button5.place(x=885, y=130)
+        self.minus_button5 = Button(self.master, text="-", font=("Arial", 12,"bold"),width=2, bg="#692415",fg="white", command=self.decrement_counter5)
+        self.minus_button5.place(x=825, y=130)
+        self.counter_entry5 = Entry(self.master, font=("Arial", 19),bg="white", justify='center',width=2)
+        self.counter_entry5.place(x=855, y=130)
+        self.counter_entry5.bind("<Return>", self.update_counter_from_entry5)
+
+        self.update_total_price()
+
+    def add_counter_buttons(self):
+        # This method adds the + and - buttons for each counter
+        button_configs = [
+            (self.increment_counter, self.decrement_counter, self.counter_entry, 505),
+            (self.increment_counter1, self.decrement_counter1, self.counter_entry1, 310),
+            (self.increment_counter2, self.decrement_counter2, self.counter_entry2, 115),
+            (self.increment_counter3, self.decrement_counter3, self.counter_entry3, 505, 885),
+            (self.increment_counter4, self.decrement_counter4, self.counter_entry4, 320, 885),
+            (self.increment_counter5, self.decrement_counter5, self.counter_entry5, 130, 885),
+        ]
+        # for idx, (inc, dec, entry, y_pos, x_pos=355) in enumerate(button_configs):
+        # self.create_counter_button(inc, dec, entry, y_pos, x_pos)
+
+    def display_selected_services(self):
+        services = [
+            ("Unyellowing", self.counter, self.prices["counter"]),
+            ("Woman Shoes", self.counter1, self.prices["counter1"]),
+            ("White Shoes", self.counter2, self.prices["counter2"]),
+            ("Repaint Color", self.counter3, self.prices["counter3"]),
+            ("Sandal Cleaning", self.counter4, self.prices["counter4"]),
+            ("Sneakers", self.counter5, self.prices["counter5"]),
+        ]
+
+        row = 0
+        # Add header
+        Label(self.services_frame, text="Service", font=("Arial", 14, "bold"), bg="white").grid(row=row, column=0, sticky="w", padx=(0, 50))
+        Label(self.services_frame, text="Unit Price", font=("Arial", 14, "bold"), bg="white").grid(row=row, column=1, padx=(0, 210))
+        Label(self.services_frame, text="Qty", font=("Arial", 14, "bold"), bg="white").grid(row=row, column=2, padx=(0, 240))
+        Label(self.services_frame, text="Total", font=("Arial", 14, "bold"), bg="white").grid(row=row, column=3, sticky="e")
+        row += 1
+
+        # baris = 1  # Mulai dari baris kedua (baris pertama adalah header)
+        # for layanan, jumlah, harga in services:
+        #     if jumlah > 0:
+        #         Label(self.services_frame, text=layanan, font=("Arial", 14), anchor="w").grid(row=baris, column=0, sticky="w", padx=(10, 0), pady=5)  # Atur posisi x dan y
+        #         Label(self.services_frame, text=f"{jumlah}x", font=("Arial", 14), anchor="center").grid(row=baris, column=1, padx=30, pady=5)  # Atur posisi x dan y
+        #         Label(self.services_frame, text=f"Rp {harga:,}", font=("Arial", 14), anchor="center").grid(row=baris, column=2, padx=30, pady=5)  # Atur posisi x dan y
+        #         Label(self.services_frame, text=f"Rp {jumlah * harga:,}", font=("Arial", 14), anchor="e").grid(row=baris, column=3, sticky="e", padx=(0, 30), pady=5)  # Atur posisi x dan y
+        #         baris += 1 
+
+        for service, count, price in services:
+            if count > 0:
+                Label(self.services_frame, text=service, font=("Arial", 14), bg="white", anchor="w").grid(row=row, column=0, sticky="w", padx=(0, 50))
+                Label(self.services_frame, text=f"Rp {price:,}", font=("Arial", 14), bg="white", anchor="center").grid(row=row, column=1, padx=(0, 210))
+                Label(self.services_frame, text=f"{count}x", font=("Arial", 14), bg="white", anchor="center").grid(row=row, column=2, padx=(0, 240))
+                Label(self.services_frame, text=f"Rp {count * price:,}", font=("Arial", 14), bg="white", anchor="e").grid(row=row, column=3, sticky="e")
+                row += 1
+
+        #         # Label(self.services_frame, text="." * 210, font=("Arial", 10),bg="white", anchor="w").grid(row=row, column=0, columnspan=6, sticky="w", padx=(0, 50))
+        #         # row += 1
+                
+    def check_and_proceed(self):
+        if self.counter == 0 and self.counter1 == 0 and self.counter2 == 0 and self.counter3 == 0 and self.counter4 == 0 and self.counter5 == 0:
+            messagebox.showerror("Error", "Silahkan pilih minimal salah satu layanan.")
+        else :
+            self.pilih_layanan()
+
+    def increment_counter(self):
+        self.counter += 1
+        self.update_counter_label()
+        self.update_counter_label()
+        self.update_total_price()
+    
+    def decrement_counter(self):
+        if self.counter > 0:  # Only decrement if counter is greater than 0
+            self.counter -= 1
+            self.update_counter_label()
+            self.update_total_price()
+
+    def update_entry_value(self):
+        self.counter_entry.delete(0, tk.END)
+        self.counter_entry.insert(0, str(self.counter))
+    
+    def update_counter_label(self):
+        self.counter_entry.config(text=f"{self.counter}")
+        self.counter_entry.delete(0, tk.END)
+        self.counter_entry.insert(0, str(self.counter))
+
+    def update_counter_from_entry(self, event):
+        try:
+            new_value = int(self.counter_entry.get())
+            if new_value >= 0:
+                self.counter = new_value
+                self.update_total_price()
+            else:
+                raise ValueError("Negative value not allowed")
+        except ValueError:
+            self.update_entry_value()
+
+    #Unyellowing
+    def increment_counter1(self):
+        self.counter1 += 1
+        self.update_counter_label1()
+        self.update_total_price()
+        self.update_counter_label1()
+
+    def decrement_counter1(self):
+        if self.counter1 > 0:  # Only decrement if counter is greater than 0
+            self.counter1 -= 1
+            self.update_counter_label1()
+            self.update_total_price()
+            self.update_counter_label1()
+
+    def update_entry_value1(self):
+        self.counter_entry1.delete(0, tk.END)
+        self.counter_entry1.insert(0, str(self.counter1))
+    
+    def update_counter_label1(self):
+        self.counter_entry1.config(text=f"{self.counter1}")
+        self.counter_entry1.delete(0, tk.END)
+        self.counter_entry1.insert(0, str(self.counter1))
+    
+    def update_counter_from_entry1(self, event):
+        try:
+            new_value = int(self.counter_entry1.get())
+            if new_value >= 0:
+                self.counter1 = new_value
+                self.update_counter_label1()
+                self.update_total_price()
+            
+            else:
+                raise ValueError("Negative value not allowed")
+        except ValueError:
+            self.update_entry_value1()
+
+    #White Shoes
+    def increment_counter2(self):
+        self.counter2 += 1
+        self.update_counter_label2()
+        self.update_total_price()
+        self.update_counter_label2()
+    
+    def decrement_counter2(self):
+        if self.counter2 > 0:  # Only decrement if counter is greater than 0
+            self.counter2 -= 1
+            self.update_counter_label2()
+            self.update_total_price()
+            self.update_counter_label2()
+        
+    def update_entry_value2(self):
+        self.counter_entry2.delete(0, tk.END)
+        self.counter_entry2.insert(0, str(self.counter2))
+    
+    def update_counter_label2(self):
+        self.counter_entry2.config(text=f"{self.counter2}")
+        self.counter_entry2.delete(0, tk.END)
+        self.counter_entry2.insert(0, str(self.counter2))
+    
+
+    def update_counter_from_entry2(self, event):
+        try:
+            new_value = int(self.counter_entry2.get())
+            if new_value >= 0:
+                self.counter2 = new_value
+                self.update_counter_label2()
+                self.update_total_price()
+            
+            else:
+                raise ValueError("Negative value not allowed")
+        except ValueError:
+            self.update_entry_value2()
+
+    #Repaint
+    def increment_counter3(self):
+        self.counter3 += 1
+        self.update_counter_label3()
+        self.update_total_price()
+        self.update_counter_label3()
+    
+    def decrement_counter3(self):
+        if self.counter3 > 0:  # Only decrement if counter is greater than 0
+            self.counter3 -= 1
+            self.update_counter_label3()
+            self.update_total_price()
+            self.update_counter_label3()
+        
+    def update_entry_value3(self):
+        self.counter_entry3.delete(0, tk.END)
+        self.counter_entry3.insert(0, str(self.counter3))
+
+    def update_counter_label3(self):
+        self.counter_entry3.config(text=f"{self.counter3}")
+        self.counter_entry3.delete(0, tk.END)
+        self.counter_entry3.insert(0, str(self.counter3))
+
+    def update_counter_from_entry3(self, event):
+        try:
+            new_value = int(self.counter_entry3.get())
+            if new_value >= 0:
+                self.counter3 = new_value
+                self.update_counter_label3()
+                self.update_total_price()    
+            else:
+                raise ValueError("Negative value not allowed")
+        except ValueError:
+            self.update_entry_value3()
+
+    #Sandal Cleaning
+    def increment_counter4(self):
+        self.counter4 += 1
+        self.update_counter_label4()
+        self.update_total_price()
+        self.update_counter_label4()
+    
+
+    def decrement_counter4(self):
+        if self.counter4 > 0:  # Only decrement if counter is greater than 0
+            self.counter4 -= 1
+            self.update_counter_label4()
+            self.update_total_price()
+            self.update_counter_label4()
+
+    def update_entry_value4(self):
+        self.counter_entry4.delete(0, tk.END)
+        self.counter_entry4.insert(0, str(self.counter4))
+
+    def update_counter_label4(self):
+        self.counter_entry4.config(text=f"{self.counter4}")
+        self.counter_entry4.delete(0, tk.END)
+        self.counter_entry4.insert(0, str(self.counter4))
+
+    def update_counter_from_entry4(self, event):
+        try:
+            new_value = int(self.counter_entry4.get())
+            if new_value >= 0:
+                self.counter4 = new_value
+                self.update_counter_label4()
+                self.update_total_price()
+            
+            else:
+                raise ValueError("Negative value not allowed")
+        except ValueError:
+            self.update_entry_value4()
+
+    #Sneakers
+    def increment_counter5(self):
+        self.counter5 += 1
+        self.update_counter_label5()
+        self.update_total_price()
+        self.update_counter_label5()
+    
+    def decrement_counter5(self):
+        if self.counter5 > 0:  # Only decrement if counter is greater than 0
+            self.counter5 -= 1
+            self.update_counter_label5()
+            self.update_total_price()
+            self.update_counter_label5()
+
+    def update_entry_value5(self):
+        self.counter_entry5.delete(0, tk.END)
+        self.counter_entry5.insert(0, str(self.counter5))
+    
+    def update_counter_label5(self):
+        self.counter_entry5.config(text=f"{self.counter5}")
+        self.counter_entry5.delete(0, tk.END)
+        self.counter_entry5.insert(0, str(self.counter5))
+    
+    def update_counter_from_entry5(self, event):
+        try:
+            new_value = int(self.counter_entry5.get())
+            if new_value >= 0:
+                self.counter5 = new_value
+                self.update_counter_label5()
+                self.update_total_price()
+            
+            else:
+                raise ValueError("Negative value not allowed")
+        except ValueError:
+            self.update_entry_value5()
+
+    def update_total_price(self):
+        self.total = (
+            self.counter * self.prices["counter"] +
+            self.counter1 * self.prices["counter1"] +
+            self.counter2 * self.prices["counter2"] +
+            self.counter3 * self.prices["counter3"] +
+            self.counter4 * self.prices["counter4"] +
+            self.counter5 * self.prices["counter5"]
+        )
+        
+        self.total_label.config(text=f"Rp {self.total:,}")
+    
+    def pilih_layanan (self) :
+        for widget in self.master.winfo_children():
+                widget.destroy()
+
+        self.home_page = Image.open("DESAIN ATLAS/9.jpg")
+        self.photo10 = ImageTk.PhotoImage(self.home_page.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel10 = Label(self.master, image=self.photo10, compound="center", bg="#387647")
+        self.bg_panel10.image = self.photo10
+        self.bg_panel10.pack(fill="both", expand="yes")
+
+        self.tombolayananstandard = PhotoImage(file = r"DESAIN ATLAS/Tombol standard.png") 
+        self.tpilihstandard = Button(self.master,image=self.tombolayananstandard,width=430,height=185,borderwidth=0,bg='white',activebackground='white',command= self.pilih_layanan_3, cursor='hand2').place(x=160, y=233)
+        
+        self.tombolayananexpress = PhotoImage(file = r"DESAIN ATLAS/Tombol express.png") 
+        self.tpilihexpress = Button(self.master,image=self.tombolayananexpress,width=433,height=185,borderwidth=0,bg='white',activebackground='white', command= self.pilih_layanan_2,cursor='hand2').place(x=695, y=229)
+
+    def pilih_layanan_2 (self) :
+        for widget in self.master.winfo_children():
+                widget.destroy()
+
+        self.selected_service = "express"
+
+        self.layanan1 = Image.open("DESAIN ATLAS/layanan 2 tombol.png")
+        self.photo11 = ImageTk.PhotoImage(self.layanan1.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel11 = Label(self.master, image=self.photo11, compound="center", bg="#387647")
+        self.bg_panel11.image = self.photo11
+        self.bg_panel11.pack(fill="both", expand="yes")
+
+        self.tombolayananstandardabu = PhotoImage(file = r"DESAIN ATLAS/tombol abu standard.png") 
+        self.tpilihstandardabu = Button(self.master,image=self.tombolayananstandardabu,width=430,height=185,borderwidth=0,bg='white',activebackground='white',command= self.pilih_layanan, cursor='hand2').place(x=160, y=233)
+
+        self.tombol_rincian = PhotoImage(file = r"DESAIN ATLAS/Tombollanjut.png") 
+        self.trincian = Button(self.master,image=self.tombol_rincian,width=150,height=42,borderwidth=0,bg='white',activebackground='white', command= self.rincian_pesanan_express,cursor='hand2').place(x=564, y=507)
+
+    def pilih_layanan_3 (self) :
+        for widget in self.master.winfo_children():
+                widget.destroy()
+
+        self.layanan2 = Image.open("DESAIN ATLAS/ATLAS Shoes and Care layanan 2.png")
+        self.photo12 = ImageTk.PhotoImage(self.layanan2.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel12 = Label(self.master, image=self.photo12, compound="center", bg="#387647")
+        self.bg_panel12.image = self.photo12
+        self.bg_panel12.pack(fill="both", expand="yes")
+        
+        self.tombolayananexpressabu = PhotoImage(file = r"DESAIN ATLAS/Tombol abu express.png") 
+        self.tpilihexpressabu = Button(self.master,image=self.tombolayananexpressabu,width=433,height=185,borderwidth=0,bg='white',activebackground='white', command= self.pilih_layanan,cursor='hand2').place(x=696, y=232)
+
+        self.tombol_rincian1 = PhotoImage(file = r"DESAIN ATLAS/Tombollanjut.png") 
+        self.trincian1 = Button(self.master,image=self.tombol_rincian1,width=150,height=42,borderwidth=0,bg='white',activebackground='white', command= self.rincian_pesanan,cursor='hand2').place(x=564, y=507)
+
+    def rincian_pesanan (self) :
+        for widget in self.master.winfo_children():
+                widget.destroy()
+
+        self.rincianpesanan= Image.open("DESAIN ATLAS/RINCIAN PESANAN 1.png")
+        self.photo13 = ImageTk.PhotoImage(self.rincianpesanan.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel13 = Label(self.master, image=self.photo13, compound="center", bg="#387647")
+        self.bg_panel13.image = self.photo13
+        self.bg_panel13.pack(fill="both", expand="yes")
+
+        self.tombol_pickup = PhotoImage(file = r"DESAIN ATLAS/tombol pickup.png") 
+        self.tpickup = Button(self.master,image=self.tombol_pickup,width=153,height=98,borderwidth=0,bg='#F0E9D0',activebackground='#F0E9D0', command= self.rincian_pesanan_pick_up,cursor='hand2').place(x=188, y=114)
+
+        self.tombol_delivery = PhotoImage(file = r"DESAIN ATLAS/tombol delivery.png") 
+        self.tdelivery = Button(self.master,image=self.tombol_delivery,width=153,height=94,borderwidth=0,bg='#F0E9D0',activebackground='#F0E9D0', command= self.rincian_pesanan_delivery,cursor='hand2').place(x=368, y=114)
+
+        self.services_frame = Frame(self.master, bg="white")
+        self.services_frame.place(x=190, y=273)
+
+        self.total_label = Label(self.bg_panel13, text="Rp 0", font=("Arial", 14),bg="white")
+        self.total_label.place(x=953, y=550)
+
+        self.display_selected_services()
+        self.update_total_price()
+        
+    def rincian_pesanan_express (self) :
+        for widget in self.master.winfo_children():
+                widget.destroy()
+        
+        self.rincianpesananexpress= Image.open("DESAIN ATLAS/RINCIAN PESANAN 2.png")
+        self.photo14 = ImageTk.PhotoImage(self.rincianpesananexpress.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel14 = Label(self.master, image=self.photo14, compound="center", bg="#387647")
+        self.bg_panel14.image = self.photo14
+        self.bg_panel14.pack(fill="both", expand="yes")
+
+        self.tombol_pickup = PhotoImage(file = r"DESAIN ATLAS/tombol pickup.png") 
+        self.tpickup = Button(self.master,image=self.tombol_pickup,width=145,height=94,borderwidth=0,bg='#F0E9D0',activebackground='#F0E9D0', command= self.rincian_pesanan_pick_up_express,cursor='hand2').place(x=192, y=114)
+
+        self.tombol_delivery = PhotoImage(file = r"DESAIN ATLAS/tombol delivery.png") 
+        self.tdelivery = Button(self.master,image=self.tombol_delivery,width=148,height=94,borderwidth=0,bg='#F0E9D0',activebackground='#F0E9D0', command= self.rincian_pesanan_delivery_express,cursor='hand2').place(x=372, y=114)
+
+        self.express_label = Label(self.master, text="", font=("Arial", 14), fg="black", bg="white")
+        self.express_label.place(x=953, y=515)
+
+        if self.selected_service == "express":
+            self.express_label.config(text="Rp. 10,000")
+
+        self.services_frame = Frame(self.master, bg="white")
+        self.services_frame.place(x=190, y=265)
+
+        self.total_label = Label(self.bg_panel14, text="Rp 0", font=("Arial", 14),bg="white")
+        self.total_label.place(x=953, y=550)
+
+        self.display_selected_services()
+        self.update_total_price_new_1()
+
+    def rincian_pesanan_pick_up (self) :
+        for widget in self.master.winfo_children():
+                widget.destroy()
+
+        self.rincianpesananpickup= Image.open("DESAIN ATLAS/RINCIAN PESANAN 3.png")
+        self.photo15 = ImageTk.PhotoImage(self.rincianpesananpickup.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel15 = Label(self.master, image=self.photo15, compound="center", bg="#387647")
+        self.bg_panel15.image = self.photo15
+        self.bg_panel15.pack(fill="both", expand="yes")
+
+        self.deliveryabu = PhotoImage(file = r"DESAIN ATLAS/tombol deliveryabu.png") 
+        self.delivery_abu = Button(self.master,image=self.deliveryabu,width=152,height=100,borderwidth=0,bg='white',activebackground='white',command= self.rincian_pesanan, cursor='hand2').place(x=367, y=113)
+
+        self.tombolpembayaran = PhotoImage(file = r"DESAIN ATLAS/tombol pembayaran.png") 
+        self.tombol_pembayaran = Button(self.master,image=self.tombolpembayaran,width=148,height=42,borderwidth=0,bg='white',activebackground='white',command= self.pembayaran, cursor='hand2').place(x=1053, y=592)
+
+        self.services_frame = Frame(self.master, bg="white")
+        self.services_frame.place(x=190, y=265)
+
+        self.total_label = Label(self.bg_panel15, text="Rp 0", font=("Arial", 14),bg="white")
+        self.total_label.place(x=953, y=550)
+
+        self.display_selected_services()
+        self.update_total_price()
+
+    def rincian_pesanan_pick_up_express (self) :
+        for widget in self.master.winfo_children():
+                widget.destroy()
+
+        self.rincianpesananpickup= Image.open("DESAIN ATLAS/RINCIAN PESANAN 4.png")
+        self.photo17 = ImageTk.PhotoImage(self.rincianpesananpickup.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel17 = Label(self.master, image=self.photo17, compound="center", bg="#387647")
+        self.bg_panel17.image = self.photo17
+        self.bg_panel17.pack(fill="both", expand="yes")
+
+        self.deliveryabu = PhotoImage(file = r"DESAIN ATLAS/tombol deliveryabu.png") 
+        self.delivery_abu = Button(self.master,image=self.deliveryabu,width=152,height=100,borderwidth=0,bg='white',activebackground='white',command= self.rincian_pesanan, cursor='hand2').place(x=367, y=113)
+
+        self.tombolpembayaran = PhotoImage(file = r"DESAIN ATLAS/tombol pembayaran.png") 
+        self.tombol_pembayaran = Button(self.master,image=self.tombolpembayaran,width=148,height=42,borderwidth=0,bg='white',activebackground='white',command= self.pembayaran, cursor='hand2').place(x=1053, y=592)
+
+        self.express_label_2 = Label(self.master, text="", font=("Arial", 14), fg="black", bg="white")
+        self.express_label_2.place(x=953, y=515)
+
+        if self.selected_service == "express":
+            self.express_label_2.config(text="Rp. 10,000")
+
+        self.services_frame = Frame(self.master, bg="white")
+        self.services_frame.place(x=190, y=265)
+
+        self.total_label = Label(self.bg_panel17, text="Rp 0", font=("Arial", 14),bg="white")
+        self.total_label.place(x=953, y=550)
+
+        self.display_selected_services()
+        self.update_total_price_new_1()
+
+    def rincian_pesanan_delivery (self) :
+        for widget in self.master.winfo_children():
+                widget.destroy()
+
+        self.selected_service = None
+
+        self.rincianpesanandelivery= Image.open("DESAIN ATLAS/RINCIAN PESANAN 5.png")
+        self.photo16 = ImageTk.PhotoImage(self.rincianpesanandelivery.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel16 = Label(self.master, image=self.photo16, compound="center", bg="#387647")
+        self.bg_panel16.image = self.photo16
+        self.bg_panel16.pack(fill="both", expand="yes")
+
+        self.pickabu = PhotoImage(file = r"DESAIN ATLAS/tombolpickupabu.png") 
+        self.pick_abu = Button(self.master,image=self.pickabu,width=170,height=100,borderwidth=0,bg='white',activebackground='white',command= self.rincian_pesanan, cursor='hand2').place(x=184, y=113)
+        
+        self.tombolpembayaran = PhotoImage(file = r"DESAIN ATLAS/tombol pembayaran.png") 
+        self.tombol_pembayaran = Button(self.master,image=self.tombolpembayaran,width=148,height=42,borderwidth=0,bg='white',activebackground='white',command= self.validate_form, cursor='hand2').place(x=1053, y=592)
+
+        self.harga_label = Label(self.master, text="", font=("Arial", 14), fg="black", bg="white")
+        self.harga_label.place(x=953, y=515)
+
+        # Membuat objek style
+        self.style = ttk.Style()
+        
+        # Menambahkan style untuk Combobox
+        self.style.configure('TCombobox', background='white', font=('Open Sans', 10))
+
+        locations = ["Surabaya Selatan", "Surabaya Pusat", "Surabaya Barat", "Surabaya Timur", "Surabaya Utara", "Luar Surabaya", "Luar Jawa Timur"]
+        self.location_dropdown = ttk.Combobox(self.master, values=locations, width=36, height=12, style='TCombobox')  #textvariable=self.selected_location tambahkan ini untuk menyimpan lokasi
+        self.location_dropdown.place(x=796, y=115)
+        self.location_dropdown.bind("<<ComboboxSelected>>", self.update_harga_label)
+
+        self.alamat_entry = Entry(self.bg_panel16, border=0, width=42, font=("Georgia", 15), fg="black")
+        self.alamat_entry.place(x=550, y=170)
+
+        self.alamat_entry.insert(0, "Masukan Detail Alamat")
+        self.alamat_entry.bind("<FocusIn>", self.clear_placeholder_detail_alamat)
+        self.alamat_entry.bind("<FocusOut>", self.add_placeholder_detail_alamat)
+
+        self.services_frame = Frame(self.master, bg="white")
+        self.services_frame.place(x=190, y=265)
+
+        self.total_label = Label(self.bg_panel16, text="Rp 0", font=("Arial", 14),bg="white")
+        self.total_label.place(x=953, y=550)
+
+        self.display_selected_services()
+        self.update_total_price_new()
+
+    def rincian_pesanan_delivery_express (self) :
+        for widget in self.master.winfo_children():
+                widget.destroy()
+
+        self.rincianpesanandeliveryexpress= Image.open("DESAIN ATLAS/RINCIAN PESANAN 6.png")
+        self.photo18 = ImageTk.PhotoImage(self.rincianpesanandeliveryexpress.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel18 = Label(self.master, image=self.photo18, compound="center", bg="#387647")
+        self.bg_panel18.image = self.photo18
+        self.bg_panel18.pack(fill="both", expand="yes")
+
+        self.pickabu = PhotoImage(file = r"DESAIN ATLAS/tombolpickupabu.png") 
+        self.pick_abu = Button(self.master,image=self.pickabu,width=170,height=100,borderwidth=0,bg='white',activebackground='white',command= self.rincian_pesanan, cursor='hand2').place(x=184, y=113)
+        
+        self.tombolpembayaran = PhotoImage(file = r"DESAIN ATLAS/tombol pembayaran.png") 
+        self.tombol_pembayaran = Button(self.master,image=self.tombolpembayaran,width=148,height=42,borderwidth=0,bg='white',activebackground='white',command= self.validate_form_1, cursor='hand2').place(x=1053, y=592)
+
+        self.harga_label = Label(self.master, text="", font=("Arial", 14), fg="black", bg="white")
+        self.harga_label.place(x=953, y=515)
+
+        self.express_label_1 = Label(self.master, text="", font=("Arial", 14), fg="black", bg="white")
+        self.express_label_1.place(x=953, y=490)
+
+        if self.selected_service == "express":
+            self.express_label_1.config(text="Rp. 10,000")
+
+        # Membuat objek style
+        self.style = ttk.Style()
+        
+        # Menambahkan style untuk Combobox
+        self.style.configure('TCombobox', background='white', font=('Open Sans', 10))
+
+        locations = ["Surabaya Selatan", "Surabaya Pusat", "Surabaya Barat", "Surabaya Timur", "Surabaya Utara", "Luar Surabaya", "Luar Jawa Timur"]
+        self.location_dropdown = ttk.Combobox(self.master, values=locations, width=36, height=12, style='TCombobox')  #textvariable=self.selected_location tambahkan ini untuk menyimpan lokasi
+        self.location_dropdown.place(x=796, y=115)
+        self.location_dropdown.bind("<<ComboboxSelected>>", self.update_harga_label)
+
+        self.alamat_entry_1 = Entry(self.bg_panel18, border=0, width=42, font=("Georgia", 15), fg="black")
+        self.alamat_entry_1.place(x=550, y=170)
+
+        self.alamat_entry_1.insert(0, "Masukan Detail Alamat")
+        self.alamat_entry_1.bind("<FocusIn>", self.clear_placeholder_detail_alamat_express)
+        self.alamat_entry_1.bind("<FocusOut>", self.add_placeholder_detail_alamat_express)
+
+        self.services_frame = Frame(self.master, bg="white")
+        self.services_frame.place(x=190, y=265)
+
+        self.total_label = Label(self.bg_panel18, text="Rp 0", font=("Arial", 14),bg="white")
+        self.total_label.place(x=953, y=550)
+
+        self.display_selected_services()
+        self.update_total_price_new()
+
+    def clear_placeholder_detail_alamat_express(self, event):
+        if self.alamat_entry_1.get() == "Masukan Detail Alamat":
+            self.alamat_entry_1.delete(0, tk.END)
+            self.alamat_entry_1.config(fg='black')
+
+    def add_placeholder_detail_alamat_express(self, event):
+        if self.alamat_entry_1.get() == "":
+            self.alamat_entry_1.insert(0, "Masukan Detail Alamat")
+            self.alamat_entry_1.config(fg='grey')
+
+    def clear_placeholder_detail_alamat(self, event):
+        if self.alamat_entry.get() == "Masukan Detail Alamat":
+            self.alamat_entry.delete(0, tk.END)
+            self.alamat_entry.config(fg='black')
+
+    def add_placeholder_detail_alamat(self, event):
+        if self.alamat_entry.get() == "":
+            self.alamat_entry.insert(0, "Masukan Detail Alamat")
+            self.alamat_entry.config(fg='grey')
+
+    def update_total_price_new(self):
+        services_1 = [
+            ("Unyellowing", self.counter, self.prices["counter"]),
+            ("Woman Shoes", self.counter1, self.prices["counter1"]),
+            ("White Shoes", self.counter2, self.prices["counter2"]),
+            ("Repaint Color", self.counter3, self.prices["counter3"]),
+            ("Sandal Cleaning", self.counter4, self.prices["counter4"]),
+            ("Sneakers", self.counter5, self.prices["counter5"]),
+        ]
+        total_service_price = sum(count * price for service, count, price in services_1 if count > 0)
+        
+        # Biaya layanan express
+        if self.selected_service == "express"  :
+            express_fee = 10000
+        else :
+            express_fee = 0
+
+        lokasi = self.location_dropdown.get() if self.location_dropdown else ""
+        harga_dict = {
+            "Surabaya Selatan": 5000,
+            "Surabaya Pusat": 10000,
+            "Surabaya Barat": 20000,
+            "Surabaya Timur": 25000,
+            "Surabaya Utara": 30000,
+            "Luar Surabaya": 50000,
+            "Luar Jawa Timur": 100000
+        }
+        self.ongkir = harga_dict.get(lokasi, 0)  # Default to 0 jika lokasi tidak ditemukan
+
+        # Total harga
+        self.total = total_service_price + express_fee + self.ongkir
+        self.total_label.config(text=f"Rp {self.total:,}")
+
+    def update_total_price_new_1(self):
+        services_1 = [
+            ("Unyellowing", self.counter, self.prices["counter"]),
+            ("Woman Shoes", self.counter1, self.prices["counter1"]),
+            ("White Shoes", self.counter2, self.prices["counter2"]),
+            ("Repaint Color", self.counter3, self.prices["counter3"]),
+            ("Sandal Cleaning", self.counter4, self.prices["counter4"]),
+            ("Sneakers", self.counter5, self.prices["counter5"]),
+        ]
+        total_service_price = sum(count * price for service, count, price in services_1 if count > 0)
+        
+        # Biaya layanan express
+        if self.selected_service == "express"  :
+            express_fee = 10000
+        else :
+            express_fee = 0
+
+        # Total harga
+        self.total = total_service_price + express_fee 
+        self.total_label.config(text=f"Rp {self.total:,}")
+
+
+    def update_harga_label(self, event):
+        lokasi = self.location_dropdown.get()
+        harga_dict = {
+        "Surabaya Selatan": "Rp. 5,000",
+        "Surabaya Pusat": "Rp. 10,000",
+        "Surabaya Barat": "Rp. 20,000",
+        "Surabaya Timur": "Rp. 25,000",
+        "Surabaya Utara": "Rp. 30,000",
+        "Luar Surabaya": "Rp. 50,000",
+        "Luar Jawa Timur": "Rp. 100,000"
+        }
+        self.ongkir = harga_dict.get(lokasi, "Rp. 0")
+        self.harga_label.config(text=self.ongkir)
+        self.update_total_price_new()
+
+    def validate_form(self):
+        location = self.location_dropdown.get()
+        address = self.alamat_entry.get()
+
+        if location == "":
+            messagebox.showerror("Peringatan", "Silakan pilih lokasi pengiriman.")
+        elif address == "" or address == "Masukan Detail Alamat":
+            messagebox.showerror("Peringatan", "Silakan masukkan detail alamat.")
+        else:
+            self.pembayaran()
+    
+    def validate_form_1(self):
+        location = self.location_dropdown.get()
+        address = self.alamat_entry_1.get()
+
+        if location == "":
+            messagebox.showerror("Peringatan", "Silakan pilih lokasi pengiriman.")
+        elif address == "" or address == "Masukan Detail Alamat":
+            messagebox.showerror("Peringatan", "Silakan masukkan detail alamat.")
+        else:
+            self.pembayaran()
+
+    def pembayaran (self) :
+        for widget in self.master.winfo_children():
+                    widget.destroy()
+
+        self.halamanpembayaran= Image.open("DESAIN ATLAS/17.jpg")
+        self.photo19 = ImageTk.PhotoImage(self.halamanpembayaran.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel19 = Label(self.master, image=self.photo19, compound="center", bg="#387647")
+        self.bg_panel19.image = self.photo19
+        self.bg_panel19.pack(fill="both", expand="yes")
+
+        self.tombolcod = PhotoImage(file = r"DESAIN ATLAS/tunai.png") 
+        self.tombol_cod = Button(self.master,image=self.tombolcod,width=220,height=70,borderwidth=0,bg='white',activebackground='white',command= self.COD, cursor='hand2').place(x=530, y=490)
+
+        self.tombolgopay = PhotoImage(file = r"DESAIN ATLAS/gopay.png") 
+        self.tombol_gopay = Button(self.master,image=self.tombolgopay,width=250,height=70,borderwidth=0,bg='white',activebackground='white',command= self.NONCOD, cursor='hand2').place(x=95, y=160)
+
+        self.tombolshoopepay = PhotoImage(file = r"DESAIN ATLAS/tombol shoope pay.png") 
+        self.tombol_shoopepay = Button(self.master,image=self.tombolshoopepay,width=250,height=70,borderwidth=0,bg='white',activebackground='white',command= self.NONCOD, cursor='hand2').place(x=382, y=160)
+
+        self.tomboldana = PhotoImage(file = r"DESAIN ATLAS/tombol dana.png") 
+        self.tombol_dana = Button(self.master,image=self.tomboldana,width=250,height=70,borderwidth=0,bg='white',activebackground='white',command= self.NONCOD, cursor='hand2').place(x=663, y=156)
+
+        self.tombolovo = PhotoImage(file = r"DESAIN ATLAS/tombol ovo.png") 
+        self.tombol_ovo = Button(self.master,image=self.tombolovo,width=240,height=70,borderwidth=0,bg='white',activebackground='white',command= self.NONCOD, cursor='hand2').place(x=950,y=156)
+
+        self.tombolbca = PhotoImage(file = r"DESAIN ATLAS/BCA.png") 
+        self.tombol_bca = Button(self.master,image=self.tombolbca,width=236,height=79,borderwidth=0,bg='white',activebackground='white',command= self.NONCOD_1, cursor='hand2').place(x=99, y=327)
+
+        self.tombolBRI= PhotoImage(file = r"DESAIN ATLAS/BRI.png") 
+        self.tombol_BRI = Button(self.master,image=self.tombolBRI,width=236,height=79,borderwidth=0,bg='white',activebackground='white',command= self.NONCOD_1, cursor='hand2').place(x=667, y=327)
+
+        self.tombolBNI = PhotoImage(file = r"DESAIN ATLAS/BNI.png") 
+        self.tombol_BNI = Button(self.master,image=self.tombolBNI,width=240,height=79,borderwidth=0,bg='white',activebackground='white',command= self.NONCOD_1, cursor='hand2').place(x=384, y=327)
+
+        self.tombolBankLain= PhotoImage(file = r"DESAIN ATLAS/BANK LAIN.png") 
+        self.tombol_BankLain = Button(self.master,image=self.tombolBankLain,width=240,height=79,borderwidth=0,bg='white',activebackground='white',command= self.transfer, cursor='hand2').place(x=955, y=327)
+
+    def COD (self) :
+        for widget in self.master.winfo_children():
+                    widget.destroy()
+
+        self.halamancod= Image.open("DESAIN ATLAS/CODDDD.jpg")
+        self.photo20 = ImageTk.PhotoImage(self.halamancod.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel20 = Label(self.master, image=self.photo20, compound="center", bg="#387647")
+        self.bg_panel20.image = self.photo20
+        self.bg_panel20.pack(fill="both", expand="yes")
+
+        self.jenis_bayar = "COD"
+
+        self.tombolkonfirmasibayar2 = PhotoImage(file = r"DESAIN ATLAS/tombol konfirmasi.png") 
+        self.tombol_konfirmasipembayaran2 = Button(self.master,image=self.tombolkonfirmasibayar2,width=210,height=50,borderwidth=0,bg='white',activebackground='white',command= self.invoice, cursor='hand2').place(x=967, y=575)
+
+        self.total_label = Label(self.bg_panel20, text=f"Total: Rp {self.total:,}", font=("Arial", 19), bg="#E4F2E5")
+        self.total_label.place(x=971, y=511)
+
+    def NONCOD (self) :
+        for widget in self.master.winfo_children():
+                    widget.destroy()
+
+        self.halamannoncod= Image.open("DESAIN ATLAS/E-Wallet _ VA.jpg")
+        self.photo21 = ImageTk.PhotoImage(self.halamannoncod.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel21 = Label(self.master, image=self.photo21, compound="center", bg="#387647")
+        self.bg_panel21.image = self.photo21
+        self.bg_panel21.pack(fill="both", expand="yes")
+
+        self.tombolbayar = PhotoImage(file = r"DESAIN ATLAS/tombol bayar.png") 
+        self.tombol_bayar = Button(self.master,image=self.tombolbayar,width=148,height=42,borderwidth=0,bg='white',activebackground='white',command= self.ewalet, cursor='hand2').place(x=997, y=577)
+
+        self.total_label = Label(self.bg_panel21, text=f"Total: Rp {self.total:,}", font=("Arial", 19), bg="#E4F2E5")
+        self.total_label.place(x=971, y=511)
+
+    def NONCOD_1 (self) :
+        for widget in self.master.winfo_children():
+                    widget.destroy()
+
+        self.halamannoncod= Image.open("DESAIN ATLAS/E-Wallet _ VA.jpg")
+        self.photo24 = ImageTk.PhotoImage(self.halamannoncod.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel24 = Label(self.master, image=self.photo24, compound="center", bg="#387647")
+        self.bg_panel24.image = self.photo24
+        self.bg_panel24.pack(fill="both", expand="yes")
+
+        self.tombolbayar = PhotoImage(file = r"DESAIN ATLAS/tombol bayar.png") 
+        self.tombol_bayar = Button(self.master,image=self.tombolbayar,width=148,height=42,borderwidth=0,bg='white',activebackground='white',command= self.transfer, cursor='hand2').place(x=997, y=577)
+
+        self.total_label = Label(self.bg_panel24, text=f"Total: Rp {self.total:,}", font=("Arial", 19), bg="#E4F2E5")
+        self.total_label.place(x=971, y=511)
+        
+    def ewalet (self) :
+        for widget in self.master.winfo_children():
+                    widget.destroy()
+
+        self.halamanewalet= Image.open("DESAIN ATLAS/QRIS.jpg")
+        self.photo22 = ImageTk.PhotoImage(self.halamanewalet.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel22 = Label(self.master, image=self.photo22, compound="center", bg="#387647")
+        self.bg_panel22.image = self.photo22
+        self.bg_panel22.pack(fill="both", expand="yes")
+
+        self.jenis_bayar = "E-WALlET"
+
+        self.tombolkonfirmasibayar2 = PhotoImage(file = r"DESAIN ATLAS/tombol konfirmasi.png") 
+        self.tombol_konfirmasipembayaran2 = Button(self.master,image=self.tombolkonfirmasibayar2,width=210,height=50,borderwidth=0,bg='white',activebackground='white',command= self.invoice, cursor='hand2').place(x=538, y=590)
+
+    def transfer (self) :
+        for widget in self.master.winfo_children():
+                    widget.destroy()
+
+        self.halamanewalet= Image.open("DESAIN ATLAS/VA.jpg")
+        self.photo23 = ImageTk.PhotoImage(self.halamanewalet.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel23 = Label(self.master, image=self.photo23, compound="center", bg="#387647")
+        self.bg_panel23.image = self.photo23
+        self.bg_panel23.pack(fill="both", expand="yes")
+
+        self.jenis_bayar = "Transfer Bank"
+
+        self.tombolkonfirmasibayar2 = PhotoImage(file = r"DESAIN ATLAS/tombol konfirmasi.png") 
+        self.tombol_konfirmasipembayaran2 = Button(self.master,image=self.tombolkonfirmasibayar2,width=210,height=50,borderwidth=0,bg='white',activebackground='white',command= self.invoice, cursor='hand2').place(x=538, y=590)
+
+    def invoice (self) :
+        for widget in self.master.winfo_children():
+                    widget.destroy()
+
+        self.halamanewalet= Image.open("DESAIN ATLAS/22.jpg")
+        self.photo24 = ImageTk.PhotoImage(self.halamanewalet.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel24 = Label(self.master, image=self.photo24, compound="center", bg="#387647")
+        self.bg_panel24.image = self.photo24
+        self.bg_panel24.pack(fill="both", expand="yes")  
+
+        self.tombolpesanlagi = PhotoImage(file = r"DESAIN ATLAS/tombol pesan lagi.png") 
+        self.tombol_pesanlagi = Button(self.master,image=self.tombolpesanlagi,width=130,height=35,borderwidth=0,bg='white',activebackground='white', command=self.back_to_home_page,cursor='hand2').place(x=885, y=583)
+
+        self.tombolclose = PhotoImage(file = r"DESAIN ATLAS/tombol close.png") 
+        self.tombol_close = Button(self.master,image=self.tombolclose,width=130,height=35,borderwidth=0,bg='white',activebackground='white', command=self.close_app,cursor='hand2').place(x=1085, y=583)
+
+        self.services_frame = Frame(self.master, bg="#F0E9D0")
+        self.services_frame.place(x=100, y=300)
+
+        self.total_label = Label(self.bg_panel24, text=f"Rp. {self.total:,}", font=("Arial", 14), bg="#F0E9D0")
+        self.total_label.place(x=660, y=565)
+
+        if self.selected_service == None :
+            pass
+        else :
+            self.express_label_invoice = Label(self.master, text="", font=("Arial", 14), fg="black", bg="#F0E9D0")
+            self.express_label_invoice.place(x=661, y=495)
+            self.express_label_invoice.config(text="Rp. 10,000")
+            self.express_label_invoice_1 = Label(self.master, text="Layanan Express", font=("Arial", 14), fg="black", bg="#F0E9D0")
+            self.express_label_invoice_1.place(x=100, y=495)
+
+        if self.ongkir == 0 :
+            pass
+        else :
+            self.ongkir_label_invoice = Label(self.master, text="", font=("Arial", 14), fg="black", bg="#F0E9D0")
+            self.ongkir_label_invoice.place(x=661, y=530)
+            self.ongkir_label_invoice.config(text=f"Rp. {self.ongkir:,}")
+            self.ongkir_label_invoice = Label(self.master, text="Biaya Ongkir", font=("Arial", 14), fg="black", bg="#F0E9D0")
+            self.ongkir_label_invoice.place(x=100, y=530)
+
+            
+        with open("data_user.csv", "r") as file:
+            for row in file:
+                fields = row.strip().split(", ")
+                if fields[1].split(": ")[1] == self.username:
+                    nama_lengkap = fields[0].split(": ")[1]
+
+                    label_nama_lengkap = Label(self.master, text=f"{nama_lengkap}", font=("Arial", 21), bg="white",fg="#40360C")
+                    label_nama_lengkap.place(x=325, y=127)
+                    break
+            else:
+                messagebox.showerror("Error", "Data pengguna tidak ditemukan")
+        
+        ongkir = self.ongkir
+        if ongkir == 0 :
+           self.ongkir_data = "PICKUP" 
+        else :
+            self.ongkir_data = "DELIVERY"
+
+        selected_services = self.collect_selected_services()
+        self.current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open("DATA_PESAN.csv", "a", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            if self.selected_service is None:
+                self.selected_service = "Standard"
+            else:
+                self.selected_service = "Express"
+
+            # csvfile.write("\n")
+            writer.writerow([f"Nama Lengkap : {nama_lengkap}",f"Layanan: {selected_services}", f"Jenis Layanan: {self.selected_service}", f"Tanggal Pesan: {self.current_datetime}",f"Ongkir Cost: {self.ongkir_data}", f"Total: Rp{self.total}", f"Pembayaran: {self.jenis_bayar}"])
+
+        self.display_selected_services_invoice()
+        self.sourting()
+
+        standard_order_numbers = 0
+        express_order_numbers = []
+
+        with open("SOURTING_DATA.csv", newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            data = list(reader)
+            standard_order_numbers = len(data) - 1  # Subtract 1 to account for the header row
+
+            for row in data[1:]:  # Skip the header row by slicing the list
+                order_number = row[0]  
+                if self.selected_service == "Standard" :
+                    order_label = Label(self.bg_panel24, text=f"{standard_order_numbers}", font=("Arial", 21), bg="white", fg="#40360C")
+                    order_label.place(x=373, y=177)
+                else :
+                    service_type = row[3]  
+                    if service_type == "Express":
+                        express_order_numbers.append(order_number)
+                        last_order_number = express_order_numbers[-1]
+                        order_label = Label(self.bg_panel24, text=f"{last_order_number}", font=("Arial", 21), bg="white", fg="#40360C")
+                        order_label.place(x=373, y=177)
+
+    def collect_selected_services(self):
+        services = [
+            ("Unyellowing", self.counter),
+            ("Woman Shoes", self.counter1),
+            ("White Shoes", self.counter2),
+            ("Repaint Color", self.counter3),
+            ("Sandal Cleaning", self.counter4),
+            ("Sneakers", self.counter5),
+        ]
+
+        self.selected_services = ", ".join([f"{service} ({count}x)" for service, count in services if count > 0])
+        return self.selected_services
+
+    def display_selected_services_invoice(self):
+        services = [
+            ("Unyellowing", self.counter, self.prices["counter"]),
+            ("Woman Shoes", self.counter1, self.prices["counter1"]),
+            ("White Shoes", self.counter2, self.prices["counter2"]),
+            ("Repaint Color", self.counter3, self.prices["counter3"]),
+            ("Sandal Cleaning", self.counter4, self.prices["counter4"]),
+            ("Sneakers", self.counter5, self.prices["counter5"]),
+        ]
+
+        row = 0
+        for service, count, price in services:
+            if count > 0:
+                Label(self.services_frame, text=service, font=("Arial", 14), bg="#F0E9D0", anchor="w").grid(row=row, column=0, sticky="w", padx=(0, 50))
+                Label(self.services_frame, text=f"", font=("Arial", 14), bg="#F0E9D0", anchor="center").grid(row=row, column=1, padx=(0, 317))
+                Label(self.services_frame, text=f"{count}x", font=("Arial", 14), bg="#F0E9D0", anchor="center").grid(row=row, column=2, padx=(0, 39))
+                Label(self.services_frame, text=f"Rp {count * price:,}", font=("Arial", 14), bg="#F0E9D0", anchor="e").grid(row=row, column=3, sticky="e")
+                row += 1
+
+    def cek_status_pesanan (self) :
+        for widget in self.master.winfo_children():
+                    widget.destroy()
+
+        self.halamanadmin= Image.open("DESAIN ATLAS/halaman admin_1.jpg")
+        self.photo25 = ImageTk.PhotoImage(self.halamanadmin.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel25 = Label(self.master, image=self.photo25, compound="center", bg="#387647")
+        self.bg_panel25.image = self.photo25
+        self.bg_panel25.pack(fill="both", expand="yes")  
+
+        self.tombollcekpesanan = PhotoImage(file = r"DESAIN ATLAS/tomboll cek pesanan.png") 
+        self.tombol_cekpesanan = Button(self.master,image=self.tombollcekpesanan,width=431,height=199,borderwidth=0,bg='white',activebackground='white', command=self.status_pesanan,cursor='hand2').place(x=423, y=321)
+                                                                                                    
+    def status_pesanan (self) :
+        for widget in self.master.winfo_children():
+                    widget.destroy()
+
+        self.halamanstatuspesanan= Image.open("DESAIN ATLAS/26.jpg")
+        self.photo26 = ImageTk.PhotoImage(self.halamanstatuspesanan.resize((self.master.winfo_screenwidth(), self.master.winfo_screenheight())))
+
+        self.bg_panel26 = Label(self.master, image=self.photo26, compound="center", bg="#387647")
+        self.bg_panel26.image = self.photo25
+        self.bg_panel26.pack(fill="both", expand="yes")  
+
+        self.tombolclose = PhotoImage(file = r"DESAIN ATLAS/tombol selesai.png") 
+        self.tombol_close = Button(self.master,image=self.tombolclose,width=102,height=26,borderwidth=0,bg='white',activebackground='white', command=self.close_app,cursor='hand2').place(x=1136, y=35)
+        
+        self.services_frame_admin = Frame(self.master, bg="white")
+        self.services_frame_admin.place(x=50, y=101)
+
+        self.sourting()
+        self.data_admin()
+
+    def sourting(self) :
+        filename = "DATA_PESAN.csv"
+        orders = []
+
+        with open(filename, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            for row in reader:
+                if len(row) != 7:
+                    continue  # Skip rows that don't have exactly 7 columns
+                try:
+                    # Ekstrak nilai sebenarnya dari string yang diformat
+                    nama_lengkap = row[0].split(": ")[1]
+                    layanan = row[1].split(": ")[1]
+                    jenis_layanan = row[2].split(": ")[1]
+                    tanggal_pesan = datetime.strptime(row[3].split(": ")[1], '%Y-%m-%d %H:%M:%S')
+                    ongkir_cost = row[4].split(": ")[1]
+                    total = row[5].split(": ")[1]
+                    pembayaran = row[6].split(": ")[1]
+                except IndexError:
+                    continue  # Skip rows that don't have the expected format
+
+                orders.append({
+                    "Nama Lengkap": nama_lengkap,
+                    "Layanan": layanan,
+                    "Jenis Layanan": jenis_layanan,
+                    "Tanggal Pesan": tanggal_pesan,
+                    "Ongkir Cost": ongkir_cost,
+                    "Total": total,
+                    "Pembayaran": pembayaran
+                })
+
+        express_orders = deque()
+        standard_orders = deque()
+
+        for order in orders:
+            if order["Jenis Layanan"] == "Express":
+                express_orders.append(order)
+            else:
+                standard_orders.append(order)
+
+        express_orders = sorted(express_orders, key=lambda x: x["Tanggal Pesan"])
+        standard_orders = sorted(standard_orders, key=lambda x: x["Tanggal Pesan"])
+
+        sorted_orders = list(express_orders) + list(standard_orders)
+
+        sorted_filename = "SOURTING_DATA.csv"
+        with open(sorted_filename, 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ["No","Nama Lengkap", "Layanan", "Jenis Layanan", "Tanggal Pesan", "Ongkir Cost", "Total", "Pembayaran"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+            writer.writeheader()
+            for i, order in  enumerate (sorted_orders, start=1):
+                order["Tanggal Pesan"] = order["Tanggal Pesan"].strftime('%Y-%m-%d %H:%M:%S')
+                order["No"] = i
+                writer.writerow(order)
+    
+    def data_admin(self):
+        filename = "SOURTING_DATA.csv"
+         # Create a canvas and a frame for the scrollbar
+        canvas = Canvas(self.services_frame_admin, bg="white", width=1175, height=550)
+        scrollbar = Scrollbar(self.services_frame_admin, orient=VERTICAL, command=canvas.yview)
+        scrollable_frame = Frame(canvas, bg="white")
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side=LEFT, fill=BOTH, expand=True)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        try:
+            with open("checkbox_status.csv", mode='r') as status_file:
+                reader = csv.reader(status_file)
+                for row in reader:
+                    self.checkbox_status[int(row[0])] = int(row[1])
+        except FileNotFoundError:
+            pass
+
+        with open(filename, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)  # Lewati header baris pertama
+            row = 0
+
+            for order_num, order in enumerate(reader, start=1):
+                nama_lengkap = order[1]
+                layanan = order[2].split(", ")
+                jenis_layanan = order[3]
+                tanggal_pesan = order[4]
+                ongkir_cost = order[5]
+                pembayaran = order[7]
+
+                Label(scrollable_frame, text=str(order_num), font=("Arial", 14), bg="white", anchor="center").grid(row=row, column=0, padx=(0,30))
+
+                for i, word in enumerate(layanan):
+                    Label(scrollable_frame, text=word, font=("Arial", 14), bg="white", anchor="center").grid(row=row + i, column=2, padx=(0, 25))
+
+                # Tampilkan detail pesanan dalam invoice
+                Label(scrollable_frame, text=nama_lengkap, font=("Arial", 14), bg="white", anchor="w").grid(row=row, column=1, sticky="w", padx=(0, 108))
+                Label(scrollable_frame, text=jenis_layanan, font=("Arial", 14), bg="white", anchor="center").grid(row=row, column=3, padx=(0, 20))
+                Label(scrollable_frame, text=ongkir_cost, font=("Arial", 14), bg="white", anchor="e").grid(row=row, column=4, sticky="w",padx=(0, 16))
+                Label(scrollable_frame, text=tanggal_pesan, font=("Arial", 14), bg="white", anchor="e").grid(row=row, column=5, sticky="w",padx=(0, 15))
+                Label(scrollable_frame, text=pembayaran, font=("Arial", 14), bg="white", anchor="e").grid(row=row, column=6, sticky="w",padx=(0, 20))
+
+                var = IntVar()
+                status_label = Label(scrollable_frame, text="belum selesai", font=("Arial", 14), bg="white", anchor="center")
+                status_label.grid(row=row, column=7, padx=(0, 10))
+
+                if order_num in self.checkbox_status:
+                    var.set(self.checkbox_status[order_num])  # Set checkbox status based on stored value
+                    if self.checkbox_status[order_num] == 1:
+                        status_label.config(text="selesai")  # Update label text if checkbox is checked
+
+
+                def update_label(var=var, label=status_label, order_num=order_num):
+                    if var.get() == 1:
+                        label.config(text="selesai")
+                        self.checkbox_status[order_num] = 1
+                    else:
+                        label.config(text="belum selesai")
+                        self.checkbox_status[order_num] = 0
+                    # Save checkbox status to CSV
+                    with open("checkbox_status.csv", mode='w', newline='') as status_file:
+                        writer = csv.writer(status_file)
+                        for key, value in self.checkbox_status.items():
+                            writer.writerow([key, value])
+
+                # Check if this order_num has a saved checkbox status
+                if order_num in self.checkbox_status:
+                    var.set(self.checkbox_status[order_num])
+
+                check_button = Checkbutton(scrollable_frame, variable=var, command=lambda var=var, label=status_label, order_num=order_num: update_label(var, label, order_num), bg="white")
+                check_button.grid(row=row, column=8, padx=(0, 10))
+
+                row +=  len(layanan)
+                
+    def back_to_home_page (self) :
+        for widget in self.master.winfo_children():
+                widget.destroy()
+        self.show_home ()
+
+    def close_app(self):
+        self.master.destroy()
+
+
+if __name__ == "__main__":
+    root = Tk()
+    app = Atlas(root)
+    root.mainloop()
